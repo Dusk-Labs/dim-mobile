@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
 import {
   View,
   Text,
@@ -10,11 +10,28 @@ import DimLogo from '../Components/DimLogo';
 import Button from '../Components/Button';
 import FormInput from '../Components/FormInput';
 
-const Login: any = () => {
+export const AuthContext: any = createContext(null);
+
+export type LoginProps = {
+  changeToken: (token: string) => {},
+};
+
+  export const Login: any = (props: LoginProps) => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [host, setHost] = useState("");
-  const [result, setResult] = useState({});
+
+  interface Result {
+    status: number | null,
+    token: string | null,
+    error: string | null,
+  };
+  const [result, setResult] = useState<Result>({status: null, token: null, error: null});
+
+  const { token } = useContext(AuthContext);
+  const { changeToken } = props;
+
+  console.log(`Token: ${token}`);
 
   const tryLogin = useCallback(async () => {
     const config = {
@@ -34,18 +51,25 @@ const Login: any = () => {
 
       setResult({
         status: res.status,
-        ...payload
+        token: payload.token,
+        error: payload.error,
       });
     } catch(err) {
       setResult({
-        other: err
+        status: -1, // indicate client error
+        token: null,
+        error: "ClientError",
       });
     }
   }, [username, password, host, setResult]);
 
   useEffect(() => {
-    console.log(result);
-  }, [result]);
+    if (result.status === 200 && result.token) {
+      changeToken(result.token);
+    }
+
+    // TODO: Handle and display errors etc.
+  }, [result, changeToken]);
 
   return (
     <View style={style.view}>
@@ -107,5 +131,3 @@ const style = StyleSheet.create({
     marginTop: 5
   },
 });
-
-export default Login;
