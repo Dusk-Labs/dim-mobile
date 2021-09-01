@@ -10,10 +10,16 @@
     "lint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
+    "@react-navigation/drawer": "^6.1.4",
+    "@react-navigation/native": "^6.0.2",
     "invariant": "^2.2.4",
     "react": "17.0.1",
     "react-native": "0.64.1",
     "react-native-fontawesome": "^7.0.0",
+    "react-native-gesture-handler": "^1.10.3",
+    "react-native-reanimated": "1.13.3",
+    "react-native-safe-area-context": "^3.3.0",
+    "react-native-screens": "^3.6.0",
     "react-native-svg": "^12.1.1",
     "ts-server": "^0.0.15"
   },

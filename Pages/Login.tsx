@@ -12,11 +12,7 @@ import FormInput from '../Components/FormInput';
 
 export const AuthContext: any = createContext(null);
 
-export type LoginProps = {
-  changeToken: (token: string) => {},
-};
-
-  export const Login: any = (props: LoginProps) => {
+export const Login: any = () => {
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [host, setHost] = useState("");
@@ -28,10 +24,14 @@ export type LoginProps = {
   };
   const [result, setResult] = useState<Result>({status: null, token: null, error: null});
 
-  const { token } = useContext(AuthContext);
-  const { changeToken } = props;
+  const { token, setToken } = useContext(AuthContext);
 
-  console.log(`Token: ${token}`);
+  if (token) {
+    // TODO: check if the token is still valid.
+    //       then if valid redirect to dashboard.
+  }
+
+  // TODO: store token in persistent storage/cookies.
 
   const tryLogin = useCallback(async () => {
     const config = {
@@ -65,11 +65,11 @@ export type LoginProps = {
 
   useEffect(() => {
     if (result.status === 200 && result.token) {
-      changeToken(result.token);
+      setToken(result.token);
     }
 
     // TODO: Handle and display errors etc.
-  }, [result, changeToken]);
+  }, [result, setToken]);
 
   return (
     <View style={style.view}>
