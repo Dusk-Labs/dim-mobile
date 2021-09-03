@@ -1,30 +1,37 @@
-import React, { useState, useCallback, useEffect, createContext, useContext } from 'react';
+import React, { useState, useCallback, useEffect, useContext } from 'react';
 import {
   View,
   Text,
   StyleSheet,
+  Linking,
+  Platform
 } from 'react-native';
 import { RegularIcons, SolidIcons } from 'react-native-fontawesome';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import DimLogo from '../Components/DimLogo';
 import Button from '../Components/Button';
 import FormInput from '../Components/FormInput';
 
-export const AuthContext: any = createContext(null);
+import { AuthContext } from '../Context/AuthContext';
 
-export const Login: any = () => {
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
-  const [host, setHost] = useState("");
-
-  interface Result {
+interface IAuthResponse {
     status: number | null,
     token: string | null,
     error: string | null,
-  };
-  const [result, setResult] = useState<Result>({status: null, token: null, error: null});
+};
 
-  const { token, setToken } = useContext(AuthContext);
+const PERSISTENCE_KEY = "AUTH_STATE";
+
+export const Login: any = (props: any) => {
+  const { navigation } = props;
+  const [username, setUsername] = useState("");
+  const [password, setPassword] = useState("");
+  const [isStateReady, setStateReady] = useState(false);
+
+  const [result, setResult] = useState<IAuthResponse>({status: null, token: null, error: null});
+
+  const { token, setToken, host, setHost } = useContext(AuthContext);
 
   if (token) {
     // TODO: check if the token is still valid.
@@ -61,15 +68,44 @@ export const Login: any = () => {
         error: "ClientError",
       });
     }
-  }, [username, password, host, setResult]);
+  }, [username, password, host]);
 
   useEffect(() => {
     if (result.status === 200 && result.token) {
+      AsyncStorage.setItem(PERSISTENCE_KEY, JSON.stringify({host, token: result.token}));
       setToken(result.token);
+      navigation.navigate("dashboard");
     }
 
     // TODO: Handle and display errors etc.
-  }, [result, setToken]);
+  }, [result]);
+
+  useEffect(() => {
+    const restoreState = async () => {
+      try {
+        const initialUrl = await Linking.getInitialURL();
+
+        if (Platform.OS !== 'web' && initialUrl == null) {
+          // Only restore state if there's no deep link and we're not on web
+          const savedStateString = await AsyncStorage.getItem(PERSISTENCE_KEY);
+          const state = savedStateString ? JSON.parse(savedStateString) : null;
+
+          if (state !== null) {
+            const {host, token} = state;
+            setHost(host);
+            setToken(token);
+            navigation.navigate("dashboard");
+          }
+        }
+      } finally {
+        setStateReady(true);
+      }
+    };
+
+    if (!isStateReady) {
+      restoreState();
+    }
+  }, [isStateReady]);
 
   return (
     <View style={style.view}>
